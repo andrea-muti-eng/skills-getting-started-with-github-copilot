@@ -65,9 +65,39 @@ section h3 {
   background-color: #f9f9f9;
 }
 
-.activity-card h4 {
+.activity-card.full {
+  background-color: #fff4f4;
+  border-color: #ef9a9a;
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 10px;
+}
+
+.activity-card h4 {
+  margin-bottom: 0;
   color: #0066cc;
+}
+
+.activity-card.full h4 {
+  color: #ad1457;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #c62828;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .activity-card p {
@@ -159,6 +189,11 @@ button {
 
 button:hover {
   background-color: #3949ab;
+}
+
+button:disabled {
+  background-color: #9fa8da;
+  cursor: not-allowed;
 }
 
 .message {

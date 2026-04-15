@@ -1,8 +1,21 @@
-document.addEventListener("DOMContentLoaded", () => {
+export function initApp() {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  if (!activitiesList || !activitySelect || !signupForm || !messageDiv) {
+    return;
+  }
+
+  const signupButton = signupForm.querySelector('button[type="submit"]');
+
+  function updateSignupButtonState() {
+    const selectedOption = activitySelect.options[activitySelect.selectedIndex];
+    const disableSignup = !selectedOption || selectedOption.value === "" || selectedOption.disabled;
+
+    signupButton.disabled = disableSignup;
+    signupButton.title = selectedOption && selectedOption.disabled ? "This activity is full" : "";
+  }
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -17,9 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
+        const isFull = spotsLeft <= 0;
+
+        activityCard.className = isFull ? "activity-card full" : "activity-card";
 
         const participantsList = details.participants.length > 0
           ? `<ul class="participants-list">${details.participants.map(p =>
@@ -28,7 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
           : `<p class="no-participants">No participants yet. Be the first!</p>`;
 
         activityCard.innerHTML = `
-          <h4>${name}</h4>
+          <div class="activity-card-header">
+            <h4>${name}</h4>
+            ${isFull ? '<span class="status-badge">Full</span>' : ""}
+          </div>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
@@ -43,9 +61,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Add option to select dropdown
         const option = document.createElement("option");
         option.value = name;
-        option.textContent = name;
+        option.textContent = spotsLeft > 0 ? name : `${name} (Full)`;
+        option.disabled = spotsLeft <= 0;
         activitySelect.appendChild(option);
       });
+
+      updateSignupButtonState();
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
@@ -93,6 +114,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value;
     const activity = document.getElementById("activity").value;
+    const selectedOption = activitySelect.options[activitySelect.selectedIndex];
+
+    if (!activity || (selectedOption && selectedOption.disabled)) {
+      messageDiv.textContent = "This activity is full. Please select another one.";
+      messageDiv.className = "error";
+      messageDiv.classList.remove("hidden");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -129,5 +158,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Initialize app
+  activitySelect.addEventListener("change", updateSignupButtonState);
   fetchActivities();
-});
+}
+
+if (!window.__DISABLE_AUTO_INIT__) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp, { once: true });
+  } else {
+    initApp();
+  }
+}
